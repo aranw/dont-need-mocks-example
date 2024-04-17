@@ -13,16 +13,11 @@ type Score struct {
 	Rank      int
 }
 
-//go:generate mockgen -destination=./mocks/retrieve_leaderboard_mock.go -package=mocks . LeaderboardRetriever
-type LeaderboardRetriever interface {
-	Get(ctx context.Context) ([]Score, error)
-}
-
-type PGXLeaderboardRetrieveer struct {
+type Database struct {
 	Conn *pgx.Conn
 }
 
-func (p *PGXLeaderboardRetrieveer) Get(ctx context.Context) ([]Score, error) {
+func (p *Database) Get(ctx context.Context) ([]Score, error) {
 	var scores []Score
 	rows, err := p.Conn.Query(ctx, `SELECT
 							t.user_id,
@@ -54,8 +49,4 @@ func (p *PGXLeaderboardRetrieveer) Get(ctx context.Context) ([]Score, error) {
 	}
 
 	return scores, nil
-}
-
-func GetLeaderboard(ret LeaderboardRetriever) ([]Score, error) {
-	return ret.Get(context.Background())
 }

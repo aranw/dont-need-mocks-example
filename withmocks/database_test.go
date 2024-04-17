@@ -5,39 +5,10 @@ import (
 	"testing"
 
 	"github.com/aranw/dont-need-mocks-example/withmocks"
-	"github.com/aranw/dont-need-mocks-example/withmocks/mocks"
 
 	"github.com/go-quicktest/qt"
 	"github.com/jackc/pgx/v5"
-	"go.uber.org/mock/gomock"
 )
-
-func TestGetLeaderboard(t *testing.T) {
-	gomock := gomock.NewController(t)
-	defer gomock.Finish()
-
-	m := mocks.NewMockLeaderboardRetriever(gomock)
-
-	m.EXPECT().Get(context.Background()).Times(1).Return([]withmocks.Score{
-		{UserID: 1, HighScore: 5, Rank: 1},
-		{UserID: 2, HighScore: 3, Rank: 2},
-	}, nil)
-
-	scores, err := withmocks.GetLeaderboard(m)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// User 1 is in Rank 1
-	qt.Assert(t, qt.Equals(scores[0].HighScore, 5))
-	qt.Assert(t, qt.Equals(scores[0].UserID, 1))
-	qt.Assert(t, qt.Equals(scores[0].Rank, 1))
-
-	// User 2 is in Rank 2
-	qt.Assert(t, qt.Equals(scores[1].HighScore, 3))
-	qt.Assert(t, qt.Equals(scores[1].UserID, 2))
-	qt.Assert(t, qt.Equals(scores[1].Rank, 2))
-}
 
 func TestGetLeaderboard_PGX(t *testing.T) {
 	// Use default connection settings for example
@@ -69,14 +40,16 @@ func TestGetLeaderboard_PGX(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pgxRetriever := &withmocks.PGXLeaderboardRetrieveer{
+	db := &withmocks.Database{
 		Conn: conn,
 	}
 
-	scores, err := withmocks.GetLeaderboard(pgxRetriever)
+	scores, err := db.Get(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// This should fail as we've changed the ordering
 
 	// User 1 is in Rank 1
 	qt.Assert(t, qt.Equals(scores[0].HighScore, 5))

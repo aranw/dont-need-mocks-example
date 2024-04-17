@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func TestGetLeaderboard(t *testing.T) {
+func TestService_GetLeaderboard(t *testing.T) {
 	// Use default connection settings for example
 	conn, err := pgx.Connect(context.Background(), "")
 	if err != nil {
@@ -40,18 +40,12 @@ func TestGetLeaderboard(t *testing.T) {
 
 	db := &Database{Conn: conn}
 
-	scores, err := db.Get(context.Background())
-	if err != nil {
-		t.Fatal(err)
+	service := &Service{
+		DB: db,
 	}
 
-	// User 1 is in Rank 1
-	qt.Assert(t, qt.Equals(scores[0].HighScore, 5))
-	qt.Assert(t, qt.Equals(scores[0].UserID, 1))
-	qt.Assert(t, qt.Equals(scores[0].Rank, 1))
-
-	// User 2 is in Rank 2
-	qt.Assert(t, qt.Equals(scores[1].HighScore, 3))
-	qt.Assert(t, qt.Equals(scores[1].UserID, 2))
-	qt.Assert(t, qt.Equals(scores[1].Rank, 2))
+	scores := service.GetLeaderboard()
+	qt.Assert(t, qt.HasLen(scores, 2))
+	qt.Assert(t, qt.Equals(scores[0], "User ID: 1, High Score: 5, Rank: 1"))
+	qt.Assert(t, qt.Equals(scores[1], "User ID: 2, High Score: 3, Rank: 2"))
 }

@@ -13,9 +13,13 @@ type Score struct {
 	Rank      int
 }
 
-func GetLeaderboard(ctx context.Context, conn *pgx.Conn) ([]Score, error) {
+type Database struct {
+	Conn *pgx.Conn
+}
+
+func (d *Database) Get(ctx context.Context) ([]Score, error) {
 	var scores []Score
-	rows, err := conn.Query(ctx, `SELECT
+	rows, err := d.Conn.Query(ctx, `SELECT
 							t.user_id,
 							t.high_score,
 							RANK() OVER (ORDER BY t.high_score DESC) AS rank
